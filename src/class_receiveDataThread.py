@@ -79,10 +79,9 @@ class receiveDataThread(threading.Thread):
 
                 break
             # print 'Received', repr(self.data)
-            if len(self.data) == dataLen:
+            if len(self.data) == dataLen: # If self.sock.recv returned no data:
                 with shared.printLock:
                     print 'Connection to', self.HOST, 'closed. Closing receiveData thread. (ID:', str(id(self)) + ')'
-
                 break
             else:
                 self.processData()
