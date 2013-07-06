@@ -1,21 +1,22 @@
 import threading
-import shared
 import time
 from time import strftime, localtime, gmtime
 import random
+import sys
+
+import shared
 from addresses import *
 import highlevelcrypto
 import proofofwork
-import sys
 from class_addressGenerator import pointMult
 import tr
+
 
 # This thread, of which there is only one, does the heavy lifting:
 # calculating POWs.
 
 
 class singleWorker(threading.Thread):
-
     def __init__(self):
         # QThread.__init__(self, parent)
         threading.Thread.__init__(self)
@@ -58,11 +59,11 @@ class singleWorker(threading.Thread):
             10)  # give some time for the GUI to start before we start on existing POW tasks.
 
         self.sendMsg()
-                     # just in case there are any pending tasks for msg
-                     # messages that have yet to be sent.
+        # just in case there are any pending tasks for msg
+        # messages that have yet to be sent.
         self.sendBroadcast()
-                           # just in case there are any tasks for Broadcasts
-                           # that have yet to be sent.
+        # just in case there are any tasks for Broadcasts
+        # that have yet to be sent.
 
         while True:
             command, data = shared.workerQueue.get()
@@ -98,7 +99,8 @@ class singleWorker(threading.Thread):
 
             shared.workerQueue.task_done()
 
-    def doPOWForMyV2Pubkey(self, hash):  # This function also broadcasts out the pubkey message once it is done with the POW
+    def doPOWForMyV2Pubkey(self,
+                           hash):  # This function also broadcasts out the pubkey message once it is done with the POW
         # Look up my stream number based on my address hash
         """configSections = shared.config.sections()
         for addressInKeysFile in configSections:
@@ -173,7 +175,8 @@ class singleWorker(threading.Thread):
         with open(shared.appdata + 'keys.dat', 'wb') as configfile:
             shared.config.write(configfile)
 
-    def doPOWForMyV3Pubkey(self, hash):  # This function also broadcasts out the pubkey message once it is done with the POW
+    def doPOWForMyV3Pubkey(self,
+                           hash):  # This function also broadcasts out the pubkey message once it is done with the POW
         myAddress = shared.myAddressesByHash[hash]
         status, addressVersionNumber, streamNumber, hash = decodeAddress(
             myAddress)
@@ -345,7 +348,8 @@ class singleWorker(threading.Thread):
                         fromaddress, 'privencryptionkey')
                 except:
                     shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (
-                        ackdata, tr.translateText("MainWindow", "Error! Could not find sender address (your address) in the keys.dat file."))))
+                        ackdata, tr.translateText("MainWindow",
+                                                  "Error! Could not find sender address (your address) in the keys.dat file."))))
                     continue
 
                 privSigningKeyHex = shared.decodeWalletImportFormat(
@@ -369,11 +373,12 @@ class singleWorker(threading.Thread):
                 dataToEncrypt += '\x00\x00\x00\x01'  # behavior bitfield
                 dataToEncrypt += pubSigningKey[1:]
                 dataToEncrypt += pubEncryptionKey[1:]
-		if addressVersionNumber >= 3:
-                    dataToEncrypt += encodeVarint(shared.config.getint(fromaddress,'noncetrialsperbyte'))
-                    dataToEncrypt += encodeVarint(shared.config.getint(fromaddress,'payloadlengthextrabytes'))
+                if addressVersionNumber >= 3:
+                    dataToEncrypt += encodeVarint(shared.config.getint(fromaddress, 'noncetrialsperbyte'))
+                    dataToEncrypt += encodeVarint(shared.config.getint(fromaddress, 'payloadlengthextrabytes'))
                 dataToEncrypt += '\x02' # message encoding type
-                dataToEncrypt += encodeVarint(len('Subject:' + subject + '\n' + 'Body:' + body))  #Type 2 is simple UTF-8 message encoding per the documentation on the wiki.
+                dataToEncrypt += encodeVarint(len(
+                    'Subject:' + subject + '\n' + 'Body:' + body))  #Type 2 is simple UTF-8 message encoding per the documentation on the wiki.
                 dataToEncrypt += 'Subject:' + subject + '\n' + 'Body:' + body
                 signature = highlevelcrypto.sign(
                     dataToEncrypt, privSigningKeyHex)
@@ -408,8 +413,10 @@ class singleWorker(threading.Thread):
                 shared.broadcastToSendDataQueues((
                     streamNumber, 'sendinv', inventoryHash))
 
-                shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata, tr.translateText("MainWindow", "Broadcast sent on %1").arg(unicode(
-                    strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))), 'utf-8')))))
+                shared.UISignalQueue.put(('updateSentItemStatusByAckdata',
+                                          (ackdata, tr.translateText("MainWindow", "Broadcast sent on %1").arg(unicode(
+                                              strftime(shared.config.get('bitmessagesettings', 'timeformat'),
+                                                       localtime(int(time.time()))), 'utf-8')))))
 
                 # Update the status of the message in the 'sent' table to have
                 # a 'broadcastsent' status
@@ -466,7 +473,7 @@ class singleWorker(threading.Thread):
                     shared.sqlSubmitQueue.put('commit')
                     shared.sqlLock.release()
                     shared.UISignalQueue.put(('updateSentItemStatusByHash', (
-                        toripe, tr.translateText("MainWindow",'Encryption key was requested earlier.'))))
+                        toripe, tr.translateText("MainWindow", 'Encryption key was requested earlier.'))))
                 else:
                     # We have not yet sent a request for the pubkey
                     t = (toaddress,)
@@ -478,7 +485,8 @@ class singleWorker(threading.Thread):
                     shared.sqlSubmitQueue.put('commit')
                     shared.sqlLock.release()
                     shared.UISignalQueue.put(('updateSentItemStatusByHash', (
-                        toripe, tr.translateText("MainWindow",'Sending a request for the recipient\'s encryption key.'))))
+                        toripe,
+                        tr.translateText("MainWindow", 'Sending a request for the recipient\'s encryption key.'))))
                     self.requestPubKey(toaddress)
         shared.sqlLock.acquire()
         # Get all messages that are ready to be sent, and also all messages
@@ -509,7 +517,8 @@ class singleWorker(threading.Thread):
                 # it.
                 with shared.printLock:
                     sys.stderr.write(
-                        'For some reason, the status of a message in our outbox is \'doingmsgpow\' even though we lack the pubkey. Here is the RIPE hash of the needed pubkey: %s\n' % toripe.encode('hex'))
+                        'For some reason, the status of a message in our outbox is \'doingmsgpow\' even though we lack the pubkey. Here is the RIPE hash of the needed pubkey: %s\n' % toripe.encode(
+                            'hex'))
 
                 t = (toaddress,)
                 shared.sqlLock.acquire()
@@ -520,7 +529,7 @@ class singleWorker(threading.Thread):
                 shared.sqlSubmitQueue.put('commit')
                 shared.sqlLock.release()
                 shared.UISignalQueue.put(('updateSentItemStatusByHash', (
-                    toripe, tr.translateText("MainWindow",'Sending a request for the recipient\'s encryption key.'))))
+                    toripe, tr.translateText("MainWindow", 'Sending a request for the recipient\'s encryption key.'))))
                 self.requestPubKey(toaddress)
                 continue
             shared.ackdataForWhichImWatching[ackdata] = 0
@@ -586,13 +595,14 @@ class singleWorker(threading.Thread):
             # key for anything here.
             readPosition += 64
             pubEncryptionKeyBase256 = pubkeyPayload[
-                readPosition:readPosition + 64]
+                                      readPosition:readPosition + 64]
             readPosition += 64
             if toAddressVersionNumber == 2:
                 requiredAverageProofOfWorkNonceTrialsPerByte = shared.networkDefaultProofOfWorkNonceTrialsPerByte
                 requiredPayloadLengthExtraBytes = shared.networkDefaultPayloadLengthExtraBytes
                 shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (
-                    ackdata, tr.translateText("MainWindow", "Doing work necessary to send message.\nThere is no required difficulty for version 2 addresses like this."))))
+                    ackdata, tr.translateText("MainWindow",
+                                              "Doing work necessary to send message.\nThere is no required difficulty for version 2 addresses like this."))))
             elif toAddressVersionNumber == 3:
                 requiredAverageProofOfWorkNonceTrialsPerByte, varintLength = decodeVarint(
                     pubkeyPayload[readPosition:readPosition + 10])
@@ -604,10 +614,18 @@ class singleWorker(threading.Thread):
                     requiredAverageProofOfWorkNonceTrialsPerByte = shared.networkDefaultProofOfWorkNonceTrialsPerByte
                 if requiredPayloadLengthExtraBytes < shared.networkDefaultPayloadLengthExtraBytes:
                     requiredPayloadLengthExtraBytes = shared.networkDefaultPayloadLengthExtraBytes
-                shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata, tr.translateText("MainWindow", "Doing work necessary to send message.\nReceiver\'s required difficulty: %1 and %2").arg(str(float(
-                    requiredAverageProofOfWorkNonceTrialsPerByte) / shared.networkDefaultProofOfWorkNonceTrialsPerByte)).arg(str(float(requiredPayloadLengthExtraBytes) / shared.networkDefaultPayloadLengthExtraBytes)))))
+                shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata, tr.translateText("MainWindow",
+                                                                                                      "Doing work necessary to send message.\nReceiver\'s required difficulty: %1 and %2").arg(
+                    str(float(
+                        requiredAverageProofOfWorkNonceTrialsPerByte) / shared.networkDefaultProofOfWorkNonceTrialsPerByte)).arg(
+                    str(float(requiredPayloadLengthExtraBytes) / shared.networkDefaultPayloadLengthExtraBytes)))))
                 if status != 'forcepow':
-                    if (requiredAverageProofOfWorkNonceTrialsPerByte > shared.config.getint('bitmessagesettings', 'maxacceptablenoncetrialsperbyte') and shared.config.getint('bitmessagesettings', 'maxacceptablenoncetrialsperbyte') != 0) or (requiredPayloadLengthExtraBytes > shared.config.getint('bitmessagesettings', 'maxacceptablepayloadlengthextrabytes') and shared.config.getint('bitmessagesettings', 'maxacceptablepayloadlengthextrabytes') != 0):
+                    if (requiredAverageProofOfWorkNonceTrialsPerByte > shared.config.getint('bitmessagesettings',
+                                                                                            'maxacceptablenoncetrialsperbyte') and shared.config.getint(
+                            'bitmessagesettings', 'maxacceptablenoncetrialsperbyte') != 0) or (
+                            requiredPayloadLengthExtraBytes > shared.config.getint('bitmessagesettings',
+                                                                                   'maxacceptablepayloadlengthextrabytes') and shared.config.getint(
+                            'bitmessagesettings', 'maxacceptablepayloadlengthextrabytes') != 0):
                         # The demanded difficulty is more than we are willing
                         # to do.
                         shared.sqlLock.acquire()
@@ -618,12 +636,25 @@ class singleWorker(threading.Thread):
                         shared.sqlReturnQueue.get()
                         shared.sqlSubmitQueue.put('commit')
                         shared.sqlLock.release()
-                        shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata, tr.translateText("MainWindow", "Problem: The work demanded by the recipient (%1 and %2) is more difficult than you are willing to do.").arg(str(float(requiredAverageProofOfWorkNonceTrialsPerByte) / shared.networkDefaultProofOfWorkNonceTrialsPerByte)).arg(str(float(
-                            requiredPayloadLengthExtraBytes) / shared.networkDefaultPayloadLengthExtraBytes)).arg(unicode(strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))), 'utf-8')))))
+                        shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata,
+                                                                                    tr.translateText("MainWindow",
+                                                                                                     "Problem: The work demanded by the recipient (%1 and %2) is more difficult than you are willing to do.").arg(
+                                                                                        str(float(
+                                                                                            requiredAverageProofOfWorkNonceTrialsPerByte) / shared.networkDefaultProofOfWorkNonceTrialsPerByte)).arg(
+                                                                                        str(float(
+                                                                                            requiredPayloadLengthExtraBytes) / shared.networkDefaultPayloadLengthExtraBytes)).arg(
+                                                                                        unicode(strftime(
+                                                                                            shared.config.get(
+                                                                                                'bitmessagesettings',
+                                                                                                'timeformat'),
+                                                                                            localtime(
+                                                                                                int(time.time()))),
+                                                                                                'utf-8')))))
                         continue
 
             embeddedTime = pack('>Q', (int(time.time()) + random.randrange(
-                -300, 300)))  # the current time plus or minus five minutes. We will use this time both for our message and for the ackdata packed within our message.
+                -300,
+                300)))  # the current time plus or minus five minutes. We will use this time both for our message and for the ackdata packed within our message.
             if fromAddressVersionNumber == 2:
                 payload = '\x01'  # Message version.
                 payload += encodeVarint(fromAddressVersionNumber)
@@ -639,7 +670,8 @@ class singleWorker(threading.Thread):
                         fromaddress, 'privencryptionkey')
                 except:
                     shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (
-                        ackdata, tr.translateText("MainWindow", "Error! Could not find sender address (your address) in the keys.dat file."))))
+                        ackdata, tr.translateText("MainWindow",
+                                                  "Error! Could not find sender address (your address) in the keys.dat file."))))
                     continue
 
                 privSigningKeyHex = shared.decodeWalletImportFormat(
@@ -653,17 +685,18 @@ class singleWorker(threading.Thread):
                     privEncryptionKeyHex).decode('hex')
 
                 payload += pubSigningKey[
-                    1:]  # The \x04 on the beginning of the public keys are not sent. This way there is only one acceptable way to encode and send a public key.
+                           1:]  # The \x04 on the beginning of the public keys are not sent. This way there is only one acceptable way to encode and send a public key.
                 payload += pubEncryptionKey[1:]
 
                 payload += toHash  # This hash will be checked by the receiver of the message to verify that toHash belongs to them. This prevents a Surreptitious Forwarding Attack.
                 payload += '\x02'  # Type 2 is simple UTF-8 message encoding as specified on the Protocol Specification on the Bitmessage Wiki.
                 messageToTransmit = 'Subject:' + \
-                    subject + '\n' + 'Body:' + message
+                                    subject + '\n' + 'Body:' + message
                 payload += encodeVarint(len(messageToTransmit))
                 payload += messageToTransmit
                 fullAckPayload = self.generateFullAckMessage(
-                    ackdata, toStreamNumber, embeddedTime)  # The fullAckPayload is a normal msg protocol message with the proof of work already completed that the receiver of this message can easily send out.
+                    ackdata, toStreamNumber,
+                    embeddedTime)  # The fullAckPayload is a normal msg protocol message with the proof of work already completed that the receiver of this message can easily send out.
                 payload += encodeVarint(len(fullAckPayload))
                 payload += fullAckPayload
                 signature = highlevelcrypto.sign(payload, privSigningKeyHex)
@@ -685,7 +718,8 @@ class singleWorker(threading.Thread):
                         fromaddress, 'privencryptionkey')
                 except:
                     shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (
-                        ackdata, tr.translateText("MainWindow", "Error! Could not find sender address (your address) in the keys.dat file."))))
+                        ackdata, tr.translateText("MainWindow",
+                                                  "Error! Could not find sender address (your address) in the keys.dat file."))))
                     continue
 
                 privSigningKeyHex = shared.decodeWalletImportFormat(
@@ -699,7 +733,7 @@ class singleWorker(threading.Thread):
                     privEncryptionKeyHex).decode('hex')
 
                 payload += pubSigningKey[
-                    1:]  # The \x04 on the beginning of the public keys are not sent. This way there is only one acceptable way to encode and send a public key.
+                           1:]  # The \x04 on the beginning of the public keys are not sent. This way there is only one acceptable way to encode and send a public key.
                 payload += pubEncryptionKey[1:]
                 # If the receiver of our message is in our address book,
                 # subscriptions list, or whitelist then we will allow them to
@@ -719,11 +753,12 @@ class singleWorker(threading.Thread):
                 payload += toHash  # This hash will be checked by the receiver of the message to verify that toHash belongs to them. This prevents a Surreptitious Forwarding Attack.
                 payload += '\x02'  # Type 2 is simple UTF-8 message encoding as specified on the Protocol Specification on the Bitmessage Wiki.
                 messageToTransmit = 'Subject:' + \
-                    subject + '\n' + 'Body:' + message
+                                    subject + '\n' + 'Body:' + message
                 payload += encodeVarint(len(messageToTransmit))
                 payload += messageToTransmit
                 fullAckPayload = self.generateFullAckMessage(
-                    ackdata, toStreamNumber, embeddedTime)  # The fullAckPayload is a normal msg protocol message with the proof of work already completed that the receiver of this message can easily send out.
+                    ackdata, toStreamNumber,
+                    embeddedTime)  # The fullAckPayload is a normal msg protocol message with the proof of work already completed that the receiver of this message can easily send out.
                 payload += encodeVarint(len(fullAckPayload))
                 payload += fullAckPayload
                 signature = highlevelcrypto.sign(payload, privSigningKeyHex)
@@ -733,7 +768,7 @@ class singleWorker(threading.Thread):
 
             # We have assembled the data that will be encrypted.
             try:
-                encrypted = highlevelcrypto.encrypt(payload,"04"+pubEncryptionKeyBase256.encode('hex'))
+                encrypted = highlevelcrypto.encrypt(payload, "04" + pubEncryptionKeyBase256.encode('hex'))
             except:
                 shared.sqlLock.acquire()
                 t = (ackdata,)
@@ -742,12 +777,19 @@ class singleWorker(threading.Thread):
                 queryreturn = shared.sqlReturnQueue.get()
                 shared.sqlSubmitQueue.put('commit')
                 shared.sqlLock.release()
-                shared.UISignalQueue.put(('updateSentItemStatusByAckdata',(ackdata,tr.translateText("MainWindow",'Problem: The recipient\'s encryption key is no good. Could not encrypt message. %1').arg(unicode(strftime(shared.config.get('bitmessagesettings', 'timeformat'),localtime(int(time.time()))),'utf-8')))))
+                shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata, tr.translateText("MainWindow",
+                                                                                                      'Problem: The recipient\'s encryption key is no good. Could not encrypt message. %1').arg(
+                    unicode(
+                        strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))),
+                        'utf-8')))))
                 continue
             encryptedPayload = embeddedTime + encodeVarint(toStreamNumber) + encrypted
-            target = 2**64 / ((len(encryptedPayload)+requiredPayloadLengthExtraBytes+8) * requiredAverageProofOfWorkNonceTrialsPerByte)
+            target = 2 ** 64 / ((len(
+                encryptedPayload) + requiredPayloadLengthExtraBytes + 8) * requiredAverageProofOfWorkNonceTrialsPerByte)
             with shared.printLock:
-                print '(For msg message) Doing proof of work. Total required difficulty:', float(requiredAverageProofOfWorkNonceTrialsPerByte) / shared.networkDefaultProofOfWorkNonceTrialsPerByte, 'Required small message difficulty:', float(requiredPayloadLengthExtraBytes) / shared.networkDefaultPayloadLengthExtraBytes
+                print '(For msg message) Doing proof of work. Total required difficulty:', float(
+                    requiredAverageProofOfWorkNonceTrialsPerByte) / shared.networkDefaultProofOfWorkNonceTrialsPerByte, 'Required small message difficulty:', float(
+                    requiredPayloadLengthExtraBytes) / shared.networkDefaultPayloadLengthExtraBytes
 
             powStartTime = time.time()
             initialHash = hashlib.sha512(encryptedPayload).digest()
@@ -755,7 +797,8 @@ class singleWorker(threading.Thread):
             with shared.printLock:
                 print '(For msg message) Found proof of work', trialValue, 'Nonce:', nonce
                 try:
-                    print 'POW took', int(time.time() - powStartTime), 'seconds.', nonce / (time.time() - powStartTime), 'nonce trials per second.'
+                    print 'POW took', int(time.time() - powStartTime), 'seconds.', nonce / (
+                    time.time() - powStartTime), 'nonce trials per second.'
                 except:
                     pass
 
@@ -765,8 +808,10 @@ class singleWorker(threading.Thread):
             objectType = 'msg'
             shared.inventory[inventoryHash] = (
                 objectType, toStreamNumber, encryptedPayload, int(time.time()))
-            shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (ackdata, tr.translateText("MainWindow", "Message sent. Waiting on acknowledgement. Sent on %1").arg(unicode(
-                strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))), 'utf-8')))))
+            shared.UISignalQueue.put(('updateSentItemStatusByAckdata', (
+            ackdata, tr.translateText("MainWindow", "Message sent. Waiting on acknowledgement. Sent on %1").arg(unicode(
+                strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))),
+                'utf-8')))))
             print 'Broadcasting inv for my msg(within sendmsg function):', inventoryHash.encode('hex')
             shared.broadcastToSendDataQueues((
                 streamNumber, 'sendinv', inventoryHash))
@@ -803,14 +848,13 @@ class singleWorker(threading.Thread):
         statusbar = 'Doing the computations necessary to request the recipient\'s public key.'
         shared.UISignalQueue.put(('updateStatusBar', statusbar))
         shared.UISignalQueue.put(('updateSentItemStatusByHash', (
-            ripe, tr.translateText("MainWindow",'Doing work necessary to request encryption key.'))))
+            ripe, tr.translateText("MainWindow", 'Doing work necessary to request encryption key.'))))
         target = 2 ** 64 / ((len(payload) + shared.networkDefaultPayloadLengthExtraBytes +
                              8) * shared.networkDefaultProofOfWorkNonceTrialsPerByte)
         initialHash = hashlib.sha512(payload).digest()
         trialValue, nonce = proofofwork.run(target, initialHash)
         with shared.printLock:
             print 'Found proof of work', trialValue, 'Nonce:', nonce
-
 
         payload = pack('>Q', nonce) + payload
         inventoryHash = calculateInventoryHash(payload)
@@ -831,9 +875,13 @@ class singleWorker(threading.Thread):
         shared.sqlLock.release()
 
         shared.UISignalQueue.put((
-            'updateStatusBar', tr.translateText("MainWindow",'Broacasting the public key request. This program will auto-retry if they are offline.')))
-        shared.UISignalQueue.put(('updateSentItemStatusByHash', (ripe, tr.translateText("MainWindow",'Sending public key request. Waiting for reply. Requested at %1').arg(unicode(
-            strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))), 'utf-8')))))
+            'updateStatusBar', tr.translateText("MainWindow",
+                                                'Broacasting the public key request. This program will auto-retry if they are offline.')))
+        shared.UISignalQueue.put(('updateSentItemStatusByHash', (ripe, tr.translateText("MainWindow",
+                                                                                        'Sending public key request. Waiting for reply. Requested at %1').arg(
+            unicode(
+                strftime(shared.config.get('bitmessagesettings', 'timeformat'), localtime(int(time.time()))),
+                'utf-8')))))
 
     def generateFullAckMessage(self, ackdata, toStreamNumber, embeddedTime):
         payload = embeddedTime + encodeVarint(toStreamNumber) + ackdata
@@ -848,7 +896,8 @@ class singleWorker(threading.Thread):
         with shared.printLock:
             print '(For ack message) Found proof of work', trialValue, 'Nonce:', nonce
             try:
-                print 'POW took', int(time.time() - powStartTime), 'seconds.', nonce / (time.time() - powStartTime), 'nonce trials per second.'
+                print 'POW took', int(time.time() - powStartTime), 'seconds.', nonce / (
+                time.time() - powStartTime), 'nonce trials per second.'
             except:
                 pass
 

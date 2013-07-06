@@ -7,3 +7,6 @@ src/.project
 src/.pydevproject
 src/.settings/
 .idea
+bitmessagemain.exe
+*.build
+*.swp

@@ -1,4 +1,4 @@
-import shared
+import shared, os
 
 # This is used so that the translateText function can be used when we are in daemon mode and not using any QT functions.
 class translateClass:

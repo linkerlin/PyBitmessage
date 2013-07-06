@@ -13,6 +13,7 @@
 try:
     from gevent import monkey
     monkey.patch_all()
+    print "Gevent enabled!"
 except ImportError as ex:
     print "cannot find gevent"
 
